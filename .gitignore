@@ -40,3 +40,10 @@ core
 !core/
 
 lost+found
+
+# compilation artefacts
+Makefile
+stage_*
+
+*x86_64-pc-linux-gnu
+compare
