@@ -12341,7 +12341,7 @@ module_mapper::response_word (location_t loc, const char *option, ...)
       va_end (args);
       response_unexpected (loc);
     }
-  return -1;
+  return INT_MIN; /* To support remapping of responses.  */
 }
 
 /*  Module mapper protocol non-canonical precis:
@@ -12497,6 +12497,7 @@ module_mapper::translate_include (location_t loc,
                                   const char *path)
 {
   const char *res = path;
+  bool predef = type == CPP_IT_DEFAULT;
 
   timevar_start (TV_MODULE_MAPPER);
   if (mapper->is_server ())
@@ -12506,17 +12507,22 @@ module_mapper::translate_include (location_t loc,
       // it should be translated (15.2/7).
 
       send_command (loc, "%s %c%s%c %s",
-                    type == CPP_IT_INCLUDE ? "INCLUDE" : "IMPORT",
-                    angle ? '<' : '"', fname, angle ? '>' : '"',
+                    type == CPP_IT_INCLUDE || predef ? "INCLUDE" : "IMPORT",
+                    predef ? '\'' : angle ? '<' : '"',
+                    fname,
+                    predef ? '\'' : angle ? '>' : '"',
                     path);
       if (get_response (loc) <= 0)
-	return path;
+	return res;
 
-      switch (response_word (loc,
-                             "SEARCH",
-                             "IMPORT",
-                             type == CPP_IT_INCLUDE ? "INCLUDE" : NULL,
-                             NULL))
+      /* The only valid response to a default include is INCLUDE.  */
+      switch (predef
+              ? response_word (loc, "INCLUDE", NULL) + 2
+              : response_word (loc,
+                               "SEARCH",
+                               "IMPORT",
+                               type == CPP_IT_INCLUDE ? "INCLUDE" : NULL,
+                               NULL))
 	{
 	default:
 	  break;
@@ -12535,7 +12541,7 @@ module_mapper::translate_include (location_t loc,
               // FIXME: refactor with bmi_reponse() and mapping file init --
               // quite a bit of code duplication.
               char *bmi = response_token (loc, true);
-              bmi = maybe_strip_bmi_prefix (bmi);
+              bmi = maybe_strip_cmi_prefix (bmi);
 
               module_state *state =
                 get_module (build_string (strlen (path), path), NULL);
@@ -12554,7 +12560,7 @@ module_mapper::translate_include (location_t loc,
 	}
       response_eol (loc);
     }
-  else if (mapper->is_live ())
+  else if (!predef && mapper->is_live ())
     {
       /* Sadly we intern ever include name.  Adjusting to not do this
 	 will pessimize module lookup from the parser.  ??? Still the
@@ -17328,21 +17334,26 @@ module_translate_include (cpp_reader *reader, line_maps *lmaps, location_t loc,
       return path;
     }
 
-  if (!spans.init_p ())
-    /* Before the main file, don't divert.  */
-    return path;
+  bool predef = type == CPP_IT_DEFAULT;
+
+  /* We don't expect any directives before the main file.  */
+  gcc_assert (spans.init_p () || predef);
 
   dump.push (NULL);
   dump (dumper::MAPPER) && dump ("Checking %s translation %c%s%c '%s'",
-                                 type == CPP_IT_INCLUDE ? "include" : "import",
-                                 angle ? '<' : '"', name, angle ? '>' : '"',
+                                 type == CPP_IT_INCLUDE || predef ?
+                                 "include" : "import",
+                                 predef ? '\'' : angle ? '<' : '"',
+                                 name,
+                                 predef ? '\'' : angle ? '>' : '"',
                                  path);
+
   const char *res = path;
   module_mapper *mapper = module_mapper::get (loc);
   if (mapper->is_live ())
     res = mapper->translate_include (loc, type, name, angle, path);
 
-  if (type == CPP_IT_INCLUDE)
+  if (type == CPP_IT_INCLUDE || predef)
   {
     dump (dumper::MAPPER) && dump (res == path ? "Keeping include as include" :
                                    !res ? "Translating include to import" :
@@ -17371,6 +17382,8 @@ module_translate_include (cpp_reader *reader, line_maps *lmaps, location_t loc,
 
   if (!res)
     {
+      gcc_assert (!predef);
+
       size_t len = strlen (path);
 
       /* The module will be loaded when we lex the import declaration unless
@@ -17404,6 +17417,8 @@ module_translate_include (cpp_reader *reader, line_maps *lmaps, location_t loc,
       size_t actual;
       switch (type)
         {
+        case CPP_IT_DEFAULT:
+          break;
         case CPP_IT_INCLUDE:
           /* Internal keyword to permit use inside extern "C" {...}.
              Bad glibc! No biscuit!  */
