@@ -947,7 +947,7 @@ follow_ssa_edge_binary (class loop *loop, gimple *at_stmt,
 		(loop, SSA_NAME_DEF_STMT (rhs0), halting_phi,
 		 evolution_of_loop, limit);
 	      if (res == t_true)
-		;	
+		;
 	      else if (res == t_dont_know)
 		*evolution_of_loop = chrec_dont_know;
 	    }

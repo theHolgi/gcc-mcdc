@@ -1,7 +1,7 @@
 /* { dg-do assemble { target aarch64_asm_sve_ok } } */
 /* { dg-options "-O -msve-vector-bits=256 --save-temps" } */
 
-/* Case 5.1: All elements.  */ 
+/* Case 5.1: All elements.  */
 
 #include <stdint.h>
 

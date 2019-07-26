@@ -4036,4 +4036,3 @@ gfc_match_equiv_variable (gfc_expr **result)
 {
   return match_variable (result, 1, 0);
 }
-

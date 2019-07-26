@@ -28,7 +28,7 @@ along with GCC; see the file COPYING3.  If not see
 
    The merged modules proposal, p1103r1, allows me to drop support for
    two different schemes.
-   
+
    Each namespace-scope decl has a MODULE_OWNER.  This is MODULE_NONE
    for entities declared in the Global Module Fragment.  In the
    purview of the current module, it is MODULE_PURVIEW.  For any
@@ -434,7 +434,7 @@ public:
   bytes ()
     :parent (), bit_val (0), bit_pos (0)
   {}
-  ~bytes () 
+  ~bytes ()
   {
   }
 
@@ -590,7 +590,7 @@ class bytes_out : public bytes {
 
 public:
   allocator *memory;	/* Obtainer of memory.  */
-  
+
 public:
   bytes_out (allocator *memory)
     : parent (), memory (memory)
@@ -621,7 +621,7 @@ public:
     if (unsigned pad = pos & (boundary - 1))
       write (boundary - pad);
   }
-  
+
 public:
   char *write (unsigned count, bool exact = false)
   {
@@ -1170,7 +1170,7 @@ protected:
     uint32_t entry;	/* 0 */
     uint32_t phoff;	/* 0 */
     uint32_t shoff;	/* Section Header Offset in file */
-    uint32_t flags; 
+    uint32_t flags;
     uint16_t ehsize;	/* ELROND Header SIZE -- sizeof (header) */
     uint16_t phentsize; /* 0 */
     uint16_t phnum;	/* 0 */
@@ -1637,7 +1637,7 @@ elf_in::read (data *data, unsigned pos, unsigned length)
     }
 #endif
   grow (*data, length);
-#if MAPPED_READING  
+#if MAPPED_READING
   data->buffer = hdr.buffer + pos;
 #else
   if (::read (fd, data->buffer, data->size) != length)
@@ -2232,7 +2232,7 @@ public:
     EK_USING,		/* A using declaration.  */
     EK_NAMESPACE,	/* A namespace.  */
     EK_REDIRECT,	/* Redirect to a template_decl.  */
-    EK_EXPLICIT_HWM,  
+    EK_EXPLICIT_HWM,
     EK_BINDING = EK_EXPLICIT_HWM, /* Implicitly encoded.  */
     EK_MAYBE_SPEC,	/* Potentially a specialization, else a DECL,
 			   never a returned kind.  */
@@ -2242,7 +2242,7 @@ public:
 
 private:
   /* Placement of bit fields in discriminator.  */
-  enum disc_bits 
+  enum disc_bits
   {
     DB_ZERO_BIT, /* Set to disambiguate identifier from flags  */
     DB_SPECIAL_BIT, /* First dep slot is special.  */
@@ -2309,7 +2309,7 @@ private:
     gcc_checking_assert (I < 2 || !is_binding ());
     return bool ((discriminator >> I) & 1);
   }
-  
+
 public:
   bool is_binding () const
   {
@@ -2483,7 +2483,7 @@ public:
     }
 
   public:
-    bool is_for_mergeable () const 
+    bool is_for_mergeable () const
     {
       return for_mergeable;
     }
@@ -2523,7 +2523,7 @@ public:
       result.create (size);
       stack.create (50);
     }
-    ~tarjan () 
+    ~tarjan ()
     {
       gcc_assert (!stack.length ());
       stack.release ();
@@ -2551,7 +2551,7 @@ const char *
 depset::entity_kind_name () const
 {
   /* Same order as entity_kind.  */
-  static const char *const names[] = 
+  static const char *const names[] =
     {"decl", "unnamed", "clone", "specialization",
      "using", "namespace", "redirect",
      "binding"};
@@ -2637,7 +2637,7 @@ public:
   };
 
 public:
-  class hash : public hash_table<traits> 
+  class hash : public hash_table<traits>
   {
     typedef traits::compare_type key_t;
     typedef hash_table<traits> parent;
@@ -2800,7 +2800,7 @@ public:
 public:
   /* Serialize various definitions. */
   bool read_definition (tree decl);
-  
+
 private:
   bool is_matching_decl (tree existing, tree node);
   int is_skippable_defn (tree node, bool have_defn);
@@ -2918,7 +2918,7 @@ private:
   }
 
 public:
-  enum tags 
+  enum tags
   {
     tag_backref = -1,	/* Upper bound on the backrefs.  */
     tag_forced = 0,	/* Write by value.  */
@@ -5825,7 +5825,7 @@ trees_out::core_vals (tree t)
 	}
       WT (((lang_tree_node *)t)->tpi.decl);
       break;
-      
+
     case TS_CP_PTRMEM:
       WT (((lang_tree_node *)t)->ptrmem.member);
       break;
@@ -5834,7 +5834,7 @@ trees_out::core_vals (tree t)
       WT (((lang_tree_node *)t)->overload.function);
       WT (t->common.chain);
       break;
-      
+
     case TS_CP_MODULE_VECTOR:
       gcc_unreachable (); /* Should never see.  */
       break;
@@ -7351,7 +7351,7 @@ trees_out::tree_type (tree type, walk_kind ref, bool looking_inside)
     return true;
 
   tree name = TYPE_NAME (type);
-  
+
   if (name
       && TREE_CODE (name) == TYPE_DECL
       && DECL_ORIGINAL_TYPE (name))
@@ -7418,7 +7418,7 @@ trees_out::tree_type (tree type, walk_kind ref, bool looking_inside)
 
   tree root = (TYPE_NAME (type)
 	       ? TREE_TYPE (TYPE_NAME (type)) : TYPE_MAIN_VARIANT (type));
-  
+
   if (type != root)
     {
       if (streaming_p ())
@@ -7426,7 +7426,7 @@ trees_out::tree_type (tree type, walk_kind ref, bool looking_inside)
       tree_node (root);
 
       int flags = -1;
-      
+
       if (TREE_CODE (type) == FUNCTION_TYPE
 	  || TREE_CODE (type) == METHOD_TYPE)
 	{
@@ -7589,7 +7589,7 @@ trees_out::tree_type (tree type, walk_kind ref, bool looking_inside)
 		  && dump ("Wrote:%d derived type %C", tag, TREE_CODE (type));
 	      }
 	  }
-	  
+
 	return false;
       }
     }
@@ -7750,7 +7750,7 @@ trees_out::tree_value (tree t, walk_kind walk)
 	  && dump ("Cloned:%d typedef %C:%N", type_tag,
 		   TREE_CODE (TREE_TYPE (inner)), TREE_TYPE (inner));
     }
-    
+
   if (streaming_p ())
     dump (dumper::TREE) && dump ("Written:%d %C:%N", tag, TREE_CODE (t), t);
 }
@@ -7771,7 +7771,7 @@ trees_in::tree_value (walk_kind walk)
       if (!tree_node_bools (res))
 	res = NULL_TREE;
     }
-  
+
   /* Insert into map.  */
   tag = insert (res);
   if (res)
@@ -8289,7 +8289,7 @@ trees_in::tree_node ()
 	      if (code == DECLTYPE_TYPE)
 		tree_node_bools (res);
 	      SET_TYPE_STRUCTURAL_EQUALITY (res);
-	      
+
 	    }
 	    break;
 
@@ -8355,7 +8355,7 @@ trees_in::tree_node ()
 	      res = build_method_type_directly (klass, res, args);
 	    }
 	    break;
-	    
+
 	  case REFERENCE_TYPE:
 	    {
 	      bool rval = bool (u ());
@@ -9263,7 +9263,7 @@ trees_in::finish_type (tree type)
 	      if (type_memfn_rqual (type) != type_memfn_rqual (probe))
 		continue;
 	    }
-	  
+
 	  dump (dumper::TREE)
 	    && dump ("Type %p already found as %p variant of %p",
 		     (void *)type, (void *)probe, (void *)main);
@@ -9540,7 +9540,7 @@ trees_in::read_function_def (tree decl, tree maybe_template)
     {
       // FIXME: Check matching defn
     }
-  
+
   return true;
 }
 
@@ -9991,7 +9991,7 @@ trees_in::read_class_def (tree defn, tree maybe_template)
 		 friend_decls; friend_decls = TREE_CHAIN (friend_decls))
 	      {
 		tree f = TREE_VALUE (friend_decls);
-		
+
 		DECL_BEFRIENDING_CLASSES (f)
 		  = tree_cons (NULL_TREE, type, DECL_BEFRIENDING_CLASSES (f));
 		dump () && dump ("Class %N befriending %C:%N",
@@ -10479,7 +10479,7 @@ depset::hash::add_dependency (tree decl, entity_kind ek, bool is_import)
 	    }
 	}
     }
- 
+
   return dep;
 }
 
@@ -11084,7 +11084,7 @@ binding_cmp (const void *a_, const void *b_)
     }
   else
     a_export = DECL_MODULE_EXPORT_P (a_ent);
-  
+
   bool b_using = b->get_entity_kind () == depset::EK_USING;
   bool b_export;
   if (b_using)
@@ -11220,7 +11220,7 @@ depset_cmp (const void *a_, const void *b_)
   if  (a_kind != b_kind)
     /* Different entity kinds, order by that.  */
     return a_kind < b_kind ? -1 : +1;
-  
+
   tree a_decl = a->get_entity ();
   tree b_decl = b->get_entity ();
   if (a_kind == depset::EK_USING)
@@ -11415,7 +11415,7 @@ loc_spans::init (const line_maps *lmaps, const line_map_ordinary *map)
 	     interval.ordinary.first, interval.ordinary.second,
 	     interval.macro.first, interval.macro.second);
   spans.quick_push (interval);
-  
+
   /* Start an interval for the main file.  */
   interval.ordinary.first = interval.ordinary.second;
   interval.macro.second = interval.macro.first;
@@ -11691,7 +11691,7 @@ module_mapper::module_mapper (location_t loc, const char *option)
 		}
 	    }
 	  if (!arg_no++)
-	    len = ptr - (writable + 1);	  
+	    len = ptr - (writable + 1);
 	  if (!*ptr)
 	    break;
 	  *ptr = 0;
@@ -11845,7 +11845,7 @@ module_mapper::module_mapper (location_t loc, const char *option)
 	      name = writable;
 	    }
 	}
-      
+
       if (un.sun_family != AF_UNSPEC)
 	{
 	  fd = socket (un.sun_family, SOCK_STREAM, 0);
@@ -11979,7 +11979,7 @@ module_mapper::module_mapper (location_t loc, const char *option)
 		set_cmi_repo (file);
 		continue;
 	      }
-	    
+
 	    starting = false;
 	    file = maybe_strip_cmi_prefix (file);
 	    module_state *state = get_module (mod);
@@ -12990,7 +12990,7 @@ enum cluster_tag {
 };
 
 /* Declaration modifiers.  */
-enum ct_decl_flags 
+enum ct_decl_flags
 {
   cdf_is_voldemort = 0x1,	/* Is a voldemort.  */
   cdf_is_specialization = 0x2,  /* Some kind of specialization.  */
@@ -13143,7 +13143,7 @@ module_state::write_cluster (elf_out *to, depset *scc[], unsigned size,
 
       if (b->is_binding ())
 	continue;
-      
+
       gcc_checking_assert (!b->is_unreached ());
       tree decl = b->get_entity ();
 
@@ -13784,7 +13784,7 @@ module_state::read_namespaces ()
   vec<tree> spaces;
 
   spaces.create (100);
-  
+
   if (!sec.begin (loc, from (), MOD_SNAME_PFX ".nms"))
     return spaces;
 
@@ -14325,7 +14325,7 @@ module_state::prepare_locations ()
 	  location_t start_loc = MAP_START_LOCATION (omap);
 	  unsigned to = start_loc + span.ordinary_delta;
 	  location_t end_loc = MAP_START_LOCATION (omap + 1);
-	  
+
 	  dump () && dump ("Ordinary span:%u [%u,%u):%u->%d(%u)", ix, start_loc,
 			   end_loc, end_loc - start_loc,
 			   span.ordinary_delta, to);
@@ -14623,7 +14623,7 @@ module_state::read_locations ()
 
   {
     /* Read the ordinary maps.  */
-    unsigned num_ordinary = sec.u (); 
+    unsigned num_ordinary = sec.u ();
     unsigned max_rager = sec.u ();
     unsigned low_bits = sec.u ();
     location_t zero = sec.u ();
@@ -14752,7 +14752,7 @@ module_state::read_locations ()
   }
 
   filenames.release ();
-  
+
   dump.outdent ();
   if (!sec.end (from ()))
     return false;
@@ -15001,11 +15001,11 @@ public:
     }
 
   public:
-    bool get_undef () const 
+    bool get_undef () const
     {
       return (bits >> L_UNDEF) & 1;
     }
-    bool get_def () const 
+    bool get_def () const
     {
       return (bits >> L_DEF) & 1;
     }
@@ -15593,7 +15593,7 @@ module_state::read_inits (unsigned count)
 
   dump.outdent ();
   if (!sec.end (from ()))
-    return false;  
+    return false;
   return true;
 }
 
@@ -15938,7 +15938,7 @@ module_state::read_config (module_state_config &config)
 	goto done;
       }
   }
-  
+
   /* Check global trees.  */
   {
     unsigned their_fixed_length = cfg.u ();
@@ -16598,7 +16598,7 @@ get_module_owner (tree decl, bool inst_owner_p)
     }
 
   decl = STRIP_TEMPLATE (decl);
-  
+
   /* An enumeration is controlled by its enum-decl.  Its
      enumerations may not have that as DECL_CONTEXT.  */
   if (TREE_CODE (decl) == CONST_DECL
@@ -16941,7 +16941,7 @@ module_state::lazy_load (tree ns, tree id, mc_slot *mslot, bool outermost)
 
   bool ok = check_read (diags, ns, id);
   gcc_assert (ok || !outermost);
- 
+
   dump.pop (n);
 
   return ok;

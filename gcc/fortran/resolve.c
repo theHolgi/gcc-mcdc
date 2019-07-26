@@ -1866,7 +1866,7 @@ resolve_procedure_expression (gfc_expr* expr)
 
 
 /* Check that name is not a derived type.  */
- 
+
 static bool
 is_dt_name (const char *name)
 {

@@ -249,7 +249,7 @@ evrp_dom_walker::before_dom_children (basic_block bb)
 	    propagate_value (use_p, val);
 	}
     }
- 
+
   return taken_edge;
 }
 
@@ -373,4 +373,3 @@ make_pass_early_vrp (gcc::context *ctxt)
 {
   return new pass_early_vrp (ctxt);
 }
-

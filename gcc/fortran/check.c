@@ -101,7 +101,7 @@ is_boz_constant (gfc_expr *a)
 }
 
 
-/* Fortran 2018 treats a BOZ as simply a string of bits.  gfc_boz2real () 
+/* Fortran 2018 treats a BOZ as simply a string of bits.  gfc_boz2real ()
    converts the string into a REAL of the appropriate kind.  The treatment
    of the sign bit is processor dependent.  */
 
@@ -158,7 +158,7 @@ gfc_boz2real (gfc_expr *x, int kind)
 	    buf[0] = '1';
 	}
     }
- 
+
   /* Reset BOZ string to the truncated or padded version.  */
   free (x->boz.str);
   x->boz.len = len;
@@ -179,12 +179,12 @@ gfc_boz2real (gfc_expr *x, int kind)
 }
 
 
-/* Fortran 2018 treats a BOZ as simply a string of bits.  gfc_boz2int () 
+/* Fortran 2018 treats a BOZ as simply a string of bits.  gfc_boz2int ()
    converts the string into an INTEGER of the appropriate kind.  The
    treatment of the sign bit is processor dependent.  If the  converted
    value exceeds the range of the type, then wrap-around semantics are
    applied.  */
- 
+
 bool
 gfc_boz2int (gfc_expr *x, int kind)
 {
@@ -3006,7 +3006,7 @@ gfc_check_intconv (gfc_expr *x)
       || strcmp (gfc_current_intrinsic, "long") == 0)
     {
       gfc_error ("%qs intrinsic subprogram at %L has been deprecated.  "
-		 "Use INT intrinsic subprogram.", gfc_current_intrinsic, 
+		 "Use INT intrinsic subprogram.", gfc_current_intrinsic,
 		 &x->where);
       return false;
     }
@@ -3707,7 +3707,7 @@ gfc_check_findloc (gfc_actual_arglist *ap)
 		 gfc_current_intrinsic, &a->where,
 		 gfc_current_intrinsic_arg[1]->name, &v->where);
     }
-	 
+
   d = ap->next->next->expr;
   m = ap->next->next->next->expr;
   k = ap->next->next->next->next->expr;
