@@ -1450,6 +1450,7 @@ OBJS = \
 	print-tree.o \
 	profile.o \
 	profile-count.o \
+        profile-mcdc.o \
 	read-md.o \
 	read-rtl.o \
 	read-rtl-function.o \

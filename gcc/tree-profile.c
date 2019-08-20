@@ -267,13 +267,13 @@ gimple_gen_edge_profiler (int edgeno, edge e)
       tree ref = tree_coverage_counter_ref (GCOV_COUNTER_ARCS, edgeno);
       tree gcov_type_tmp_var = make_temp_ssa_name (gcov_type_node,
 						   NULL, "PROF_edge_counter");
-      gassign *stmt1 = gimple_build_assign (gcov_type_tmp_var, ref);
+      gassign *stmt1 = gimple_build_assign (gcov_type_tmp_var, ref);     // PROF_edge_counter = <arc counter #edgeno>
       gcov_type_tmp_var = make_temp_ssa_name (gcov_type_node,
 					      NULL, "PROF_edge_counter");
-      gassign *stmt2 = gimple_build_assign (gcov_type_tmp_var, PLUS_EXPR,
+      gassign *stmt2 = gimple_build_assign (gcov_type_tmp_var, PLUS_EXPR, // expr: PROF_edge_counter + 1
 					    gimple_assign_lhs (stmt1), one);
       gassign *stmt3 = gimple_build_assign (unshare_expr (ref),
-					    gimple_assign_lhs (stmt2));
+					    gimple_assign_lhs (stmt2));                                // <arc counter #edgeno> = <expr>
       gsi_insert_on_edge (e, stmt1);
       gsi_insert_on_edge (e, stmt2);
       gsi_insert_on_edge (e, stmt3);

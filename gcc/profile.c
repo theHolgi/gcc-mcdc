@@ -66,6 +66,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfgloop.h"
 
 #include "profile.h"
+#include "profile-mcdc.h"
+#include "gimple-pretty-print.h"
+
 
 /* Map from BBs/edges to gcov counters.  */
 vec<gcov_type> bb_gcov_counts;
@@ -982,6 +985,53 @@ read_thunk_profile (struct cgraph_node *node)
 }
 
 
+char digit_buf[8];
+const char *dump_identifier(tree node)
+{
+	enum tree_code code = TREE_CODE(node);
+	const char *ret = "";
+	switch (code)
+	{
+	case SSA_NAME:
+		if (SSA_NAME_IDENTIFIER (node)) ret = dump_identifier(SSA_NAME_IDENTIFIER (node));
+		break;
+	case IDENTIFIER_NODE:
+        ret = IDENTIFIER_POINTER(node);
+        break;
+	case INTEGER_CST:
+		if (tree_fits_uhwi_p(node))
+			snprintf(digit_buf, 8, "%lu",tree_to_uhwi(node));
+		else
+			snprintf(digit_buf, 8, "%l",tree_to_shwi(node));
+		ret = digit_buf;
+		break;
+	}
+	return ret;
+}
+
+char *gimple_find_condition(gimple *gs)
+{
+	char *buf = NULL;
+	switch (gimple_code (gs))
+	{
+	case GIMPLE_ASM:
+	case GIMPLE_ASSIGN:
+		break;
+	case GIMPLE_COND:
+	{
+		const char *lhs = dump_identifier(gimple_cond_lhs (gs));
+		const char *rhs = dump_identifier(gimple_cond_rhs (gs));
+		buf = XNEWVEC(char, strlen(lhs) + strlen(rhs) + 3);
+		strcpy (buf, lhs);
+		strcat (buf, op_symbol_code (gimple_cond_code (gs)));
+		strcat (buf, rhs);
+		break;
+	}
+	default:
+		break;
+	}
+	return buf;
+}
 /* Instrument and/or analyze program behavior based on program the CFG.
 
    This function creates a representation of the control flow graph (of
@@ -1230,9 +1280,20 @@ branch_prob (bool thunk)
 
   /* Write the data from which gcov can reconstruct the basic block
      graph and function line numbers (the gcno file).  */
-  if (coverage_begin_function (lineno_checksum, cfg_checksum))
+    FILE * dot_file;
+    {
+      char *dot_file_name;
+      int length = strlen(IDENTIFIER_POINTER(DECL_NAME(current_function_decl)));
+      length += 4;
+      dot_file_name = XNEWVEC (char, length);
+      strcpy (dot_file_name, IDENTIFIER_POINTER(DECL_NAME(current_function_decl)));
+      strcat (dot_file_name, ".dot");
+      dot_file = fopen(dot_file_name,"w");
+    }
+    if (coverage_begin_function (lineno_checksum, cfg_checksum))
     {
       gcov_position_t offset;
+      fprintf(dot_file, "digraph %s {\n",IDENTIFIER_POINTER(DECL_NAME(current_function_decl)));
 
       /* Basic block flags */
       offset = gcov_write_tag (GCOV_TAG_BLOCKS);
@@ -1256,20 +1317,31 @@ branch_prob (bool thunk)
 		{
 		  unsigned flag_bits = 0;
 
+		  fprintf(dot_file, "  %i -> %i",bb->index, e->dest->index);
+
 		  if (i->on_tree)
+		  {
 		    flag_bits |= GCOV_ARC_ON_TREE;
+		    fprintf(dot_file, " [color=red]");
+		  }
 		  if (e->flags & EDGE_FAKE)
 		    flag_bits |= GCOV_ARC_FAKE;
 		  if (e->flags & EDGE_FALLTHRU)
+		  {
 		    flag_bits |= GCOV_ARC_FALLTHROUGH;
+		    fprintf(dot_file, " [shape=onormal]");
+		  }
 		  /* On trees we don't have fallthru flags, but we can
 		     recompute them from CFG shape.  */
 		  if (e->flags & (EDGE_TRUE_VALUE | EDGE_FALSE_VALUE)
 		      && e->src->next_bb == e->dest)
 		    flag_bits |= GCOV_ARC_FALLTHROUGH;
 
+		  if (e->flags & EDGE_TRUE_VALUE)  fprintf(dot_file, " [label=T]");
+		  if (e->flags & EDGE_FALSE_VALUE) fprintf(dot_file, " [label=F]");
 		  gcov_write_unsigned (e->dest->index);
 		  gcov_write_unsigned (flag_bits);
+		  fprintf(dot_file, "\n");
 	        }
 	    }
 
@@ -1286,6 +1358,7 @@ branch_prob (bool thunk)
 	{
 	  gimple_stmt_iterator gsi;
 	  gcov_position_t offset = 0;
+	  const char* node_test;
 
 	  if (bb == ENTRY_BLOCK_PTR_FOR_FN (cfun)->next_bb)
 	    {
@@ -1301,12 +1374,25 @@ branch_prob (bool thunk)
 	      gimple *stmt = gsi_stmt (gsi);
 	      location_t loc = gimple_location (stmt);
 	      if (!RESERVED_LOCATION_P (loc))
-		{
-		  seen_locations.add (loc);
-		  output_location (&streamed_locations, gimple_filename (stmt),
+		    {
+		       seen_locations.add (loc);
+		       output_location (&streamed_locations, gimple_filename (stmt),
 				   gimple_lineno (stmt), &offset, bb);
-		}
+           /* Search block for condition */
+	    	  /* line is in: xloc.line */
+	    	  node_test = gimple_find_condition(stmt);
+		    }
 	    }
+  	  if (node_test)
+  	  {
+        fprintf(dot_file, "   %i [label=\"%s\"]\n",bb->index, node_test);
+  	  }
+  	  else if (offset)
+  	  {
+  		  fprintf(dot_file, "   %i [shape=box]\n", bb->index);
+  	  }
+      /* Pretty print */
+      //     gimple_dump_bb(dot_file, bb, 3, TDF_BLOCKS | TDF_RAW | TDF_EH);
 
 	  /* Notice GOTO expressions eliminated while constructing the CFG.
 	     It's hard to distinguish such expression, but goto_locus should
@@ -1330,7 +1416,32 @@ branch_prob (bool thunk)
 	      gcov_write_length (offset);
 	    }
 	}
-    }
+      /* Output MCDC structures */
+      decision_tree_list_t *mcdc;
+
+//      gimple_init_mcdc_profiler();
+
+      FOR_EACH_MCDC_STRUCT(cfun, mcdc)
+//      for (mcdc = Decision_tree_root; mcdc; for_each_mcdc_advance_walker(cfun, &mcdc))
+      {
+    	  int idx;
+    	  expanded_location curr_location = expand_location(mcdc->loc);
+    	  decision_pattern_t  *patlist = mcdc->decision_tree->patlist;
+    	  offset = gcov_write_tag (GCOV_TAG_MCDC);
+    	  gcov_write_unsigned(curr_location.line);         /* line number */
+    	  gcov_write_unsigned(patlist->bits);              /* Number of Bits */
+    	  gcov_write_unsigned(mcdc->counter_start);        /* # of first counter */
+    	  gcov_write_string(decision_tree_serialize(&(mcdc->decision_tree->tree)));    /* The serialized expression */
+    	  gcov_write_unsigned(patlist->nr_patterns_false); /* Number of false patterns */
+    	  gcov_write_unsigned(patlist->nr_patterns_true);  /* Number of true patterns */
+    	  For_each_false_pattern(idx, patlist)
+    	  	  gcov_write_unsigned(patlist->patterns[idx]);
+    	  For_each_true_pattern(idx, patlist)
+	  	  	  gcov_write_unsigned(patlist->patterns[idx]);
+	      gcov_write_length (offset);
+      }
+    } /* coverage_begin_function() */
+
 
   if (flag_profile_values)
     gimple_find_values_to_profile (&values);
@@ -1368,6 +1479,8 @@ branch_prob (bool thunk)
   values.release ();
   free_edge_list (el);
   coverage_end_function (lineno_checksum, cfg_checksum);
+  fprintf(dot_file, "}\n");
+  fclose (dot_file);
   if (flag_branch_probabilities
       && (profile_status_for_fn (cfun) == PROFILE_READ))
     {

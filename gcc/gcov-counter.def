@@ -52,3 +52,7 @@ DEF_GCOV_COUNTER(GCOV_TIME_PROFILER, "time_profiler", _time_profile)
 
 /* Top N value tracking for indirect calls.  */
 DEF_GCOV_COUNTER(GCOV_COUNTER_ICALL_TOPNV, "indirect_call_topn", _icall_topn)
+
+/* basic conditions used on complex decisions */
+DEF_GCOV_COUNTER(GCOV_COUNTER_MCDC, "mcdc", _add)
+

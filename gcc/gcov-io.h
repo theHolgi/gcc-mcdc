@@ -243,7 +243,7 @@ typedef uint64_t gcov_type_unsigned;
 #define GCOV_TAG_AFDO_FILE_NAMES ((gcov_unsigned_t)0xaa000000)
 #define GCOV_TAG_AFDO_FUNCTION ((gcov_unsigned_t)0xac000000)
 #define GCOV_TAG_AFDO_WORKING_SET ((gcov_unsigned_t)0xaf000000)
-
+#define GCOV_TAG_MCDC        ((gcov_unsigned_t)0x01470000)
 
 /* Counters that are collected.  */
 
