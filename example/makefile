@@ -8,20 +8,31 @@ LCOV    := $(LCOVDIR)/bin/lcov
 GENHTML := $(LCOVDIR)/bin/genhtml
 
 EXE  = test
+OBJS = orig/test.s arc/test.s mcdc/test.s
+
 
 ########## Requested outputs ##########
 GCDATA = test.gcda.txt test.gcno.txt
 PDFs   = testfunc.pdf testfunc2.pdf
 #######################################
 
-all: $(GCDATA) COV/index.html $(PDFs)
-
+#all: $(GCDATA) $(OBJS) COV/index.html $(PDFs)
+all: $(OBJS)
 
 $(EXE): test.o test_test.c
 	$(GCC) --coverage -o $(@) $(^)
 %.gcno: %.o
 %.o: %.c
-	$(CC) -ftest-coverage -fprofile-arcs -da -fdump-tree-gimple -fdump-tree-cfg $(^)
+	$(CC) -ftest-coverage -fprofile-arcs $(^)
+
+CFLAGS := -I..
+orig/test.s: orig/test.c
+	$(CC) $(CFLAGS) -da -fdump-tree-gimple -fdump-tree-cfg $(<)
+arc/test.s: arc/test.c
+	$(CC) $(CFLAGS) -ftest-coverage -fprofile-arcs -da -fdump-tree-gimple -fdump-tree-cfg $(<)
+mcdc/test.s: mcdc/test.c
+	$(CC) $(CFLAGS) -ftest-coverage -fprofile-mcdc -da -fdump-tree-gimple -fdump-tree-cfg $(<)
+
 test.gcda: $(EXE)
 	./$(<)
 
@@ -37,7 +48,7 @@ COV/index.html: test.c.gcov
 	$(GENHTML)  --branch-coverage -o COV test.info
 
 clean:
-	rm -rf $(EXE) *.o *.gc* *.info COV
+	rm -rf $(EXE) *.o test.c.* *.s *.gc* *.info COV
 
 testfunc.svg testfunc2.svg: test.o
 

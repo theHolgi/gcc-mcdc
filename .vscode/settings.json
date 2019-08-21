@@ -1,5 +1,8 @@
 {
    "files.associations": {
-      "asan.h": "c"
+      "asan.h": "c",
+      "expr.h": "c",
+      "tree-ssanames.h": "c",
+      "*.def": "cpp"
    }
 }
