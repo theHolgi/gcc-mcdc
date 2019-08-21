@@ -1,0 +1,73 @@
+{
+   // Use IntelliSense to learn about possible attributes.
+   // Hover to view descriptions of existing attributes.
+   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+   "version": "0.2.0",
+   "configurations": [
+      {
+         "name": "xgcc",
+         "type": "cppdbg",
+         "request": "launch",
+         "program": "${workspaceFolder}/host-x86_64-unknown-linux-gnu/gcc/xgcc",
+         "args": ["-B/home/lamm/devel/gcc-9.2.0/host-x86_64-unknown-linux-gnu/gcc/", "-B/usr/local/x86_64-unknown-linux-gnu/bin/", "-B/usr/local/x86_64-unknown-linux-gnu/lib/",
+            "-isystem", "/usr/local/x86_64-unknown-linux-gnu/include", "-isystem", "/usr/local/x86_64-unknown-linux-gnu/sys-include",
+            "-g", "-O2", "-m32", "-DIN_GCC", "-isystem", "./include", 
+             "-fpic", "-mlong-double-80", "-g", "-DIN_LIBGCC2", "-fbuilding-libgcc", "-fno-stack-protector", "-fpic", "-mlong-double-80", "-I.", "-I../../../host-x86_64-unknown-linux-gnu/gcc", 
+            "-I../../.././libgcc", "-I../../.././libgcc/../gcc", "-I../../.././libgcc/../include", "-I../../.././libgcc/config/libbid",
+            "-DENABLE_DECIMAL_BID_FORMAT", "-DHAVE_CC_TLS", "-DUSE_TLS", "-o", "_mulvdi3.o", "-DL_mulvdi3", "-c", "../../.././libgcc/libgcc2.c", "-fvisibility=hidden", "-DHIDE_EXPORTS",
+         "-v"],
+         "stopAtEntry": false,
+         "cwd": "${workspaceFolder}/x86_64-unknown-linux-gnu/32/libgcc",
+         "environment": [],
+         "externalConsole": false,
+         "MIMode": "gdb",
+         "setupCommands": [
+             {
+                 "description": "Enable pretty-printing for gdb",
+                 "text": "-enable-pretty-printing",
+                 "ignoreFailures": true
+             }
+         ]
+      },
+      {
+         "name": "cc1",
+         "type": "cppdbg",
+         "request": "launch",
+         "program": "${workspaceFolder}/host-x86_64-unknown-linux-gnu/gcc/cc1",
+         "args": ["-v", "-I.", "-I../../../host-x86_64-unknown-linux-gnu/gcc", "-I../../.././libgcc", "-I../../.././libgcc/../gcc", "-I../../.././libgcc/../include", 
+            "-I../../.././libgcc/config/libbid", "-imultilib", "32", "-imultiarch", "i386-linux-gnu", "-iprefix", "/home/lamm/devel/gcc-9.2.0/host-x86_64-unknown-linux-gnu/gcc/../lib/gcc/x86_64-unknown-linux-gnu/4.9.4/", 
+            "-isystem /home/lamm/devel/gcc-9.2.0/host-x86_64-unknown-linux-gnu/gcc/include", "-isystem /home/lamm/devel/gcc-9.2.0/host-x86_64-unknown-linux-gnu/gcc/include-fixed -D IN_GCC -D IN_LIBGCC2 -D ENABLE_DECIMAL_BID_FORMAT -D HAVE_CC_TLS -D USE_TLS -D L_mulvdi3 -D HIDE_EXPORTS -isystem /usr/local/x86_64-unknown-linux-gnu/include -isystem /usr/local/x86_64-unknown-linux-gnu/sys-include -isystem ./include ../../.././libgcc/libgcc2.c -quiet -dumpbase libgcc2.c -m32 -mlong-double-80 -mtune=generic -march=x86-64 -auxbase-strip _mulvdi3.o -g -g -O2 -version -fbuilding-libgcc -fno-stack-protector -fpic -fvisibility=hidden"],
+         "stopAtEntry": false,
+         "cwd": "${workspaceFolder}/x86_64-unknown-linux-gnu/32/libgcc",
+         "environment": [],
+         "externalConsole": false,
+         "MIMode": "gdb",
+         "setupCommands": [
+             {
+                 "description": "Enable pretty-printing for gdb",
+                 "text": "-enable-pretty-printing",
+                 "ignoreFailures": true
+             }
+         ]
+      },
+            {
+         "name": "cc test.c",
+         "type": "cppdbg",
+         "request": "launch",
+         "program": "${workspaceFolder}/host-x86_64-pc-linux-gnu/gcc/cc1",
+         "args": [ "test.c"],
+         "stopAtEntry": false,
+         "cwd": "${workspaceFolder}/example",
+         "environment": [],
+         "externalConsole": false,
+         "MIMode": "gdb",
+         "setupCommands": [
+            {
+               "description": "Enable pretty-printing for gdb",
+               "text": "-enable-pretty-printing",
+               "ignoreFailures": true
+            }
+         ]
+      }
+   ]
+}
