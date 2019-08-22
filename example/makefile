@@ -1,12 +1,12 @@
 GCC = gcc
 # BASEDIR := $(shell pwd)
 LCOVDIR := ../lcov
-HOSTGCCDIR := ../host-x86_64-pc-linux-gnu/gcc
+HOSTGCCDIR := ../host-x86_64-unknown-linux-gnu/gcc
 CC      := $(HOSTGCCDIR)/cc1
 GCOV    := $(HOSTGCCDIR)/gcov
 LCOV    := $(LCOVDIR)/bin/lcov
 GENHTML := $(LCOVDIR)/bin/genhtml
-
+OBJS    := orig/test.s arc/test.s mcdc/test.s
 EXE  = test
 
 ########## Requested outputs ##########
@@ -14,14 +14,20 @@ GCDATA = test.gcda.txt test.gcno.txt
 PDFs   = testfunc.pdf testfunc2.pdf
 #######################################
 
-all: $(GCDATA) COV/index.html $(PDFs)
+DUMPFLAGS := -da -fdump-tree-gimple -fdump-tree-cfg
 
+all: $(OBJS) $(GCDATA) COV/index.html $(PDFs)
+
+gcc: $(CC)
+.PHONY: $(CC) $(OBJS)
+$(CC):
+	cd .. && make stage3-bubble -j4
 
 $(EXE): test.o test_test.c
 	$(GCC) --coverage -o $(@) $(^)
 %.gcno: %.o
 %.o: %.c
-	$(CC) -ftest-coverage -fprofile-arcs -da -fdump-tree-gimple -fdump-tree-cfg $(^)
+	$(CC) -ftest-coverage -fprofile-mcdc $(^)
 test.gcda: $(EXE)
 	./$(<)
 
@@ -43,3 +49,11 @@ testfunc.svg testfunc2.svg: test.o
 
 %.pdf: %.svg
 	dot -Tpdf < $(<) > $(@)
+
+orig/test.s: orig/test.c
+	cd $(@D); ../$(CC) test.c $(DUMPFLAGS) -I..
+arc/test.s: arc/test.c
+	cd $(@D); ../$(CC) test.c -fprofile-arcs -ftest-coverage $(DUMPFLAGS) -I..
+mcdc/test.s: mcdc/test.c
+	cd $(@D); ../$(CC) test.c -fprofile-mcdc $(DUMPFLAGS) -I..
+

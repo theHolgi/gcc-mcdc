@@ -1390,7 +1390,6 @@ branch_prob (void)
 
   // too late:    coverage_counter_alloc (GCOV_COUNTER_MCDC, get_instrument_mcdc__startid());
       FOR_EACH_MCDC_STRUCT(cfun, mcdc)
-//      for (mcdc = Decision_tree_root; mcdc; for_each_mcdc_advance_walker(cfun, &mcdc))
       {
     	  int idx;
     	  expanded_location curr_location = expand_location(mcdc->loc);

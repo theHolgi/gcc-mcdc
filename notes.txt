@@ -22,7 +22,7 @@ init_ic_make_global_vars()
 Arc: PROF_edge_counter
 
 
-ZÅ‰hler:
+Z√§hler:
 /* Counter information for current function.  */
 static unsigned fn_ctr_mask; /* Mask of counters used.  */
 static GTY(()) tree fn_v_ctrs[GCOV_COUNTERS];   /* counter variables.  */

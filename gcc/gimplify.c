@@ -2582,16 +2582,19 @@ shortcut_cond_r (tree pred, tree *true_label_p, tree *false_label_p, bool true_i
 				      false_label_p, true_is_exit, false_is_exit, locus),
 		     shortcut_cond_r (TREE_OPERAND (pred, 2), true_label_p,
 				      false_label_p, true_is_exit, false_is_exit, new_locus));
-    }
-  else
-    {
-     tree true_path, false_path;
-     true_path  = true_is_exit ?build_mcdc_and_jump (true_label_p):build_and_jump (true_label_p);
-     false_path = false_is_exit?build_mcdc_and_jump (false_label_p):build_and_jump (false_label_p);
-      expr = build3 (COND_EXPR, void_type_node, pred, true_path, false_path);
+    } else {
+      if (profile_mcdc_flag)
+      {
+        tree true_path  = true_is_exit ?build_mcdc_and_jump (true_label_p):build_and_jump (true_label_p);
+        tree false_path = false_is_exit?build_mcdc_and_jump (false_label_p):build_and_jump (false_label_p);
+        expr = build3 (COND_EXPR, void_type_node, pred, true_path, false_path);
+      } else {
+        expr = build3 (COND_EXPR, void_type_node, pred,
+	 	     build_and_jump (true_label_p),
+	 	     build_and_jump (false_label_p));
+      }
       SET_EXPR_LOCATION (expr, locus);
     }
-
   if (local_label)
     {
       t = build1 (LABEL_EXPR, void_type_node, local_label);
@@ -2721,7 +2724,7 @@ shortcut_cond_expr (tree expr)
   else
     false_label_p = NULL;
 
-  emit_count = ((TREE_CODE(pred) == TRUTH_ANDIF_EXPR) && (!true_label));
+  emit_count = profile_mcdc_flag && ((TREE_CODE(pred) == TRUTH_ANDIF_EXPR) && (!true_label));
   /* If there was nothing else in our arms, just forward the label(s).  */
   if (!then_se && !else_se)
     return shortcut_cond_r (pred, true_label_p, false_label_p, 1, 1,

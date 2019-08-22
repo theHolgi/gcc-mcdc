@@ -1,7 +1,6 @@
-2
-orig
 test.c.*
 *.dot
 *.o
 *.gc*
 *.s
+conditions.txt

@@ -332,8 +332,6 @@ void gimple_instrument_mcdc__init(gimple_seq *pre_p, tree expr)
 #if 1
 tree instrument_mcdc__callnode(tree expr)
 {
-   tree gcov_type_tmp_var;
-
    return build2(PREINCREMENT_EXPR,gcov_type_node,
             tree_coverage_counter_ref (GCOV_COUNTER_MCDC, profile_mcdc_counter_id++),
             build_int_cst(gcov_type_node,1));
