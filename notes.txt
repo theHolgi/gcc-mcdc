@@ -30,3 +30,69 @@ static unsigned fn_n_ctrs[GCOV_COUNTERS]; /* Counters allocated.  */
 static unsigned fn_b_ctrs[GCOV_COUNTERS]; /* Allocation base.  */
 
 coverage_counter_alloc()
+
+---------------------------------------------------------------
+if (a && b)
+  x = 1
+else
+  x = 0
+
+ #0: 20000 = (F) && (*) = F
+ #1: 30002 = (T) && (F) = F
+ #2: 30003 = (T) && (T) = T
+
+----------------------------------------------------------------
+COND_EXPR(
+  TRUTH_ANDIF_EXPR(
+    NE_EXPR(PARM_DECL(IDENTIFIER_NODE(<INTEGER_TYPE>var_a)),INTEGER_CST(0)), 
+    NE_EXPR(PARM_DECL(IDENTIFIER_NODE(<INTEGER_TYPE>var_b)),INTEGER_CST(0))
+  )
+  MOD_EXPR(x = 1)
+  MOD_EXPR(x = 0)
+)
+->
+COND_EXPR(<BOOLEAN_TYPE>NE_EXPR(var_a,0),NULL,GOTO(LABEL_DECL(else))[#0])
+COND_EXPR(<BOOLEAN_TYPE>NE_EXPR(var_b,0),NULL,GOTO(LABEL_DECL(else))[#1]) 
+[#2]
+MOD_EXPR(VAR_DECL(x),INTEGER_CST(1))
+GOTO(end)
+LABEL(else)
+MOD_EXPR(VAR_DECL(x),INTEGER_CST(0))
+LABEL(end)
+RETURN_EXPR(MODIFY_EXPR(RESULT_DECL(), VAR_DECL(x)))
+->
+GIMPLE_COND<NE_EXPR>(var_a,0,NULL,else)
+GIMPLE_COND<NE_EXPR>(var_b,0,NULL,else)
+GIMPLE_LABEL
+GIMPLE_GOTO
+GIMPLE_LABEL
+GIMPLE_ASSIGN<MOD_EXPR>(x,1)
+GIMPLE_GOTO(end)   <--
+GIMPLE_LABEL()
+GIMPLE_ASSIGN<MOD_EXPR>(x,0)
+GIMPLE_LABEL(end)
+GIMPLE_ASSIGN(tmp, x)
+GIMPLE_RETURN(tmp)
+
+Wird zugewiesen:
+fndecl = tree(FUNCTION_DECL(testfunc))->function_decl->f->gimple_body = GIMPLE_BIND(...)
+                                                       ^=cfun
+
+execute_pass_list():
+pass "lower", ersetzt cfun->gimple_body
+pass "cfg", löscht cfun->gimple_body, erzeugt cfun->cfg
+
+beobachten:
+gimple_push_condition
+gimple_pop_condition  --> gimplify_ctxp->conditional_cleanups
+
+
+Einstieg:
+analyze_functions () ->   (gimplification)
+compile () -> coverage_finish() (Generate coverage variables)
+
+Edges:
+testfunc:
+5 -> 7: 16777220
+7 -> 8: 1234
+8 -> 9: 16777220

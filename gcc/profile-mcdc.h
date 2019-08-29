@@ -70,4 +70,6 @@ extern tree instrument_mcdc__callnode(tree expr);
 
 // extern tree instrument_mcdc__bc(tree expr);
 
+// Instument edge list with MCDC count nodes
+extern unsigned instrument_edges_mcdc(struct edge_list *el);
 #endif /* PROFILE_MCDC_H_ */

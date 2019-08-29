@@ -14,7 +14,7 @@ int testfunc (int var_a, int var_b)
    }
    return result_x;
 }
-
+#if 0
 int testfunc2 (int var_a, int var_b)
 {
    int x;
@@ -28,3 +28,4 @@ int testfunc2 (int var_a, int var_b)
    }
    return x;
 }
+#endif

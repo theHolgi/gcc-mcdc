@@ -1287,6 +1287,7 @@ branch_prob (void)
 	  FOR_EACH_EDGE (e, ei, bb->succs)
 	    {
 	      struct edge_info *i = EDGE_INFO (e);
+        location_t loc = e->goto_locus;
 	      if (!i->ignore)
 		{
 		  unsigned flag_bits = 0;
@@ -1311,8 +1312,19 @@ branch_prob (void)
 		      && e->src->next_bb == e->dest)
 		    flag_bits |= GCOV_ARC_FALLTHROUGH;
 
-		  if (e->flags & EDGE_TRUE_VALUE)  fprintf(dot_file, " [label=T]");
-		  if (e->flags & EDGE_FALSE_VALUE) fprintf(dot_file, " [label=F]");
+      if (IS_ADHOC_LOC(loc)) {
+        int data = *(int *)get_data_from_adhoc_loc (line_table, (e->goto_locus));
+        if (!(e->flags & (EDGE_TRUE_VALUE | EDGE_FALSE_VALUE)))
+        {
+          fprintf(dot_file, " [label=\"#%d\"]", data);
+        } else {
+          if (e->flags & EDGE_TRUE_VALUE)  fprintf(dot_file, " [label=\"T #%d\"]",data);
+          if (e->flags & EDGE_FALSE_VALUE) fprintf(dot_file, " [label=\"F #%d\"]",data);
+        }
+      } else {
+        if (e->flags & EDGE_TRUE_VALUE)  fprintf(dot_file, " [label=T]");
+        if (e->flags & EDGE_FALSE_VALUE) fprintf(dot_file, " [label=F]");
+      }
 		  gcov_write_unsigned (e->dest->index);
 		  gcov_write_unsigned (flag_bits);
 		  fprintf(dot_file, "\n");
@@ -1423,7 +1435,7 @@ branch_prob (void)
   remove_fake_edges ();
 
   /* For each edge not on the spanning tree, add counting code.  */
-  if (profile_arc_flag
+  if (profile_arc_flag 
       && coverage_counter_alloc (GCOV_COUNTER_ARCS, num_instrumented))
     {
       unsigned n_instrumented;
@@ -1436,6 +1448,21 @@ branch_prob (void)
 
       if (flag_profile_values)
 	instrument_values (values);
+
+      /* Commit changes done by instrumentation.  */
+      gsi_commit_edge_inserts ();
+    }
+
+  if (profile_mcdc_flag 
+      && coverage_counter_alloc (GCOV_COUNTER_MCDC, num_instrumented))
+    {
+      unsigned n_instrumented;
+
+      gimple_init_edge_profiler ();
+
+      n_instrumented = instrument_edges_mcdc (el);
+
+      gcc_assert (n_instrumented == num_instrumented);
 
       /* Commit changes done by instrumentation.  */
       gsi_commit_edge_inserts ();

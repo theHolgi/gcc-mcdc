@@ -2583,16 +2583,18 @@ shortcut_cond_r (tree pred, tree *true_label_p, tree *false_label_p, bool true_i
 		     shortcut_cond_r (TREE_OPERAND (pred, 2), true_label_p,
 				      false_label_p, true_is_exit, false_is_exit, new_locus));
     } else {
+      tree goto_true = build_and_jump (true_label_p);
+      tree goto_false = build_and_jump (false_label_p);
       if (profile_mcdc_flag)
       {
-        tree true_path  = true_is_exit ?build_mcdc_and_jump (true_label_p):build_and_jump (true_label_p);
-        tree false_path = false_is_exit?build_mcdc_and_jump (false_label_p):build_and_jump (false_label_p);
-        expr = build3 (COND_EXPR, void_type_node, pred, true_path, false_path);
-      } else {
-        expr = build3 (COND_EXPR, void_type_node, pred,
-	 	     build_and_jump (true_label_p),
-	 	     build_and_jump (false_label_p));
-      }
+        int *data = (int *) ggc_alloc_atomic(sizeof(int));
+        *data = 1234;
+        if (true_is_exit && CAN_HAVE_LOCATION_P(goto_true))
+          SET_EXPR_LOCATION(goto_true, COMBINE_LOCATION_DATA(line_table, locus, (void *) data));
+        if (false_is_exit && CAN_HAVE_LOCATION_P(goto_false))
+          SET_EXPR_LOCATION(goto_false, COMBINE_LOCATION_DATA(line_table, locus, (void *)data));
+      } 
+      expr = build3 (COND_EXPR, void_type_node, pred, goto_true, goto_false);
       SET_EXPR_LOCATION (expr, locus);
     }
   if (local_label)
@@ -2607,6 +2609,19 @@ shortcut_cond_r (tree pred, tree *true_label_p, tree *false_label_p, bool true_i
 /* Given a conditional expression EXPR with short-circuit boolean
    predicates using TRUTH_ANDIF_EXPR or TRUTH_ORIF_EXPR, break the
    predicate apart into the equivalent sequence of conditionals.  */
+
+/* Input:
+   expr = <COND_EXPR> (pred, then_path, false_path)
+   Output:
+   <stmt_list> {
+     if ![pred] goto else;
+     [then_path];
+     goto end;
+     else:
+     [false_path];
+     end:
+   }
+*/
 
 static tree
 shortcut_cond_expr (tree expr)
@@ -2768,8 +2783,13 @@ shortcut_cond_expr (tree expr)
 
   expr = NULL;
   append_to_statement_list (pred, &expr);
+#if 0
   if (emit_count) // condition may fall through; need to generate a counter
      append_to_statement_list (instrument_mcdc__callnode(expr), &expr); /* For the fallthrough-part of pred */
+#else
+//  if (emit_count) // condition may fall through; need to generate a counter
+//     SET_EXPR_LOCATION(pred, COMBINE_LOCATION_DATA (line_table, EXPR_LOCATION(pred), (void *)mcdc_counter));  // Associate the expression ID to the predicate
+#endif
   append_to_statement_list (then_, &expr);
   if (else_se)
     {

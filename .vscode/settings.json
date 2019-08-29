@@ -4,6 +4,7 @@
       "expr.h": "c",
       "tree-ssanames.h": "c",
       "*.def": "cpp",
-      "gcov-1.C": "cpp"
+      "gcov-1.C": "cpp",
+      "pr57662.C": "cpp"
    }
 }

@@ -29,6 +29,7 @@
 #include "cfgloop.h"
 #include "dumpfile.h"
 #include "cgraph.h"
+#include "profile.h"
 #include "profile-mcdc.h"
 
 #include "stringpool.h"
@@ -343,23 +344,41 @@ void instrument_mcdc__callnode(tree expr, int case_id)
     gimple_gen_mcdc_profiler(expr, case_id);
 }
 #endif
-void
-gimple_gen_mcdc_profiler (gimple_stmt_iterator gsi, int case_id)
+void gimple_gen_mcdc_profiler (edge e, int case_id)
 {
-  tree ref, one, gcov_type_tmp_var;
-  gimple stmt1, stmt2, stmt3;
 
-  ref = tree_coverage_counter_ref (GCOV_COUNTER_MCDC, case_id);
-  one = build_int_cst (gcov_type_node, 1);
-  gcov_type_tmp_var = make_temp_ssa_name (gcov_type_node,
-					  NULL, "PROF_mcdc_counter");
-  stmt1 = gimple_build_assign (gcov_type_tmp_var, ref);     // PROF_edge_counter = <arc counter #edgeno>
-  gcov_type_tmp_var = make_temp_ssa_name (gcov_type_node,
-					  NULL, "PROF_mcdc_counter");
-  stmt2 = gimple_build_assign_with_ops (PLUS_EXPR, gcov_type_tmp_var, // expr: PROF_edge_counter + 1
-					gimple_assign_lhs (stmt1), one);
-  stmt3 = gimple_build_assign (ref, gimple_assign_lhs (stmt2));  // unterschlagen: "unshare_expr" <arc counter #edgeno> = <expr>
-  gsi_insert_before (&gsi, stmt3,GSI_NEW_STMT);
-  gsi_insert_before (&gsi, stmt2,GSI_NEW_STMT);
-  gsi_insert_before (&gsi, stmt1,GSI_NEW_STMT);
+}
+
+extern unsigned instrument_edges_mcdc(struct edge_list *el) {
+  unsigned num_instr_edges = 0;
+  int num_edges = NUM_EDGES (el);
+  basic_block bb;
+
+  FOR_BB_BETWEEN (bb, ENTRY_BLOCK_PTR_FOR_FN (cfun), NULL, next_bb)
+    {
+      edge e;
+      edge_iterator ei;
+
+      FOR_EACH_EDGE (e, ei, bb->succs)
+		{
+	     struct edge_info *inf = EDGE_INFO (e);
+
+	     if (!inf->ignore && !inf->on_tree)
+	     {
+			 int condition_number = *(int *)get_data_from_adhoc_loc (line_table, (e->goto_locus));
+	       gcc_assert (!(e->flags & EDGE_ABNORMAL));
+	       if (dump_file)
+		      fprintf (dump_file, "Edge %d to %d instrumented%s\n",
+			     e->src->index, e->dest->index,
+			     EDGE_CRITICAL_P (e) ? " (and split)" : "");
+	       gimple_gen_mcdc_profiler (e, num_instr_edges++);
+	     }
+	   }
+    }
+
+//  total_num_blocks_created += num_edges;
+  if (dump_file)
+    fprintf (dump_file, "%d MCDC edges instrumented\n", num_instr_edges);
+  return num_instr_edges;
+
 }
